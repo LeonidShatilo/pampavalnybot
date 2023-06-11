@@ -7,10 +7,10 @@ export const errorLogger = async (initiator, error, ctx) => {
   const errorName = error.name ?? 'Error';
   const errorMessage = `${errorName}: ${error.message}\nInitiator: ${initiator}`;
 
+  await ctx.reply(DEFAULT_ERROR_MESSAGE);
+
   if (userId && ERROR_LOG_VIEWERS_USER_IDS.includes(userId)) {
     await ctx.reply(code(errorMessage));
-  } else {
-    await ctx.reply(DEFAULT_ERROR_MESSAGE);
   }
 
   console.error(errorMessage);
