@@ -10,3 +10,5 @@ export const WEBHOOK_URL = process.env.WEBHOOK_URL ?? '';
 export const PORT = process.env.PORT ?? 3000;
 
 export const DEFAULT_ERROR_MESSAGE = 'Извините, не удалось загрузить видео. Попробуйте позже.';
+
+export const TIKTOK_URLS = ['https://www.tiktok.com/', 'https://vm.tiktok.com/', 'https://m.tiktok.com/v/'];

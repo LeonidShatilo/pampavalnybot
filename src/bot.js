@@ -1,12 +1,12 @@
 import { Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters';
-import TikChan from 'tikchan';
 import express from 'express';
 
 import { auth } from './auth.js';
 import { errorLogger } from './errorLogger.js';
+import { getVideoData } from './downloader.js';
 
-import { PORT, TELEGRAM_TOKEN, WEBHOOK_URL } from './constants.js';
+import { PORT, TELEGRAM_TOKEN, TIKTOK_URLS, WEBHOOK_URL } from './constants.js';
 
 const app = express();
 
@@ -25,22 +25,26 @@ bot.command('start', async (ctx) => {
 });
 
 bot.on(message('text'), async (ctx) => {
-  const link = ctx.message.text;
-  const isTikTokLink = link.includes('tiktok.com');
+  const url = ctx.message.text;
+  const isTikTokUrl = TIKTOK_URLS.some((tiktokUrl) => url.startsWith(tiktokUrl));
 
-  if (!isTikTokLink) {
+  if (!isTikTokUrl) {
     await ctx.reply('Я поддерживаю скачивание видео только из TikTok. Пожалуйста, отправьте мне валидную ссылку.');
 
     return;
   }
 
-  try {
-    const result = await TikChan.download(link);
+  const videoData = await getVideoData({ ctx, url });
+  const donwloadedVideo = videoData?.playURL;
 
+  if (donwloadedVideo) {
     await ctx.telegram.sendChatAction(ctx.chat.id, 'upload_video');
-    await ctx.replyWithVideo(result.no_wm);
+  }
+
+  try {
+    await ctx.replyWithVideo(donwloadedVideo);
   } catch (error) {
-    errorLogger('bot.message.text', error, ctx);
+    errorLogger('bot.message.text.replyWithVideo', error, ctx);
   }
 });
 
