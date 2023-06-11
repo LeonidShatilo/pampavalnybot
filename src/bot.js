@@ -1,13 +1,20 @@
 import { Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters';
 import TikChan from 'tikchan';
+import express from 'express';
 
 import { auth } from './auth.js';
 import { errorLogger } from './errorLogger.js';
 
-import { TELEGRAM_TOKEN } from './constants.js';
+import { PORT, TELEGRAM_TOKEN, WEBHOOK_URL } from './constants.js';
+
+const app = express();
 
 const bot = new Telegraf(TELEGRAM_TOKEN);
+
+app.use(bot.webhookCallback());
+
+bot.telegram.setWebhook(WEBHOOK_URL).then(() => console.log('Webhook has been set successfully.'));
 
 bot.use(auth());
 
@@ -37,7 +44,16 @@ bot.on(message('text'), async (ctx) => {
   }
 });
 
-bot.launch();
+app.listen(PORT, () => {
+  console.log(`Server has been started on ${PORT} port.`);
+});
+
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Telegram bot is working.',
+    success: true,
+  });
+});
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
