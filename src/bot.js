@@ -36,13 +36,14 @@ bot.on(message('text'), async (ctx) => {
 
   const videoData = await getVideoData({ ctx, url });
   const donwloadedVideo = videoData?.playURL;
+  const directVideoUrl = videoData?.directVideoUrl;
 
   if (donwloadedVideo) {
     await ctx.telegram.sendChatAction(ctx.chat.id, 'upload_video');
   }
 
   try {
-    await ctx.replyWithVideo(donwloadedVideo);
+    await ctx.replyWithVideo(donwloadedVideo, { caption: directVideoUrl });
   } catch (error) {
     errorLogger('bot.message.text.replyWithVideo', error, ctx);
   }
