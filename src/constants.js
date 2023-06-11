@@ -11,4 +11,4 @@ export const PORT = process.env.PORT ?? 3000;
 
 export const DEFAULT_ERROR_MESSAGE = 'Не удалось загрузить видео 😔';
 
-export const TIKTOK_URLS = ['https://www.tiktok.com/', 'https://vm.tiktok.com/', 'https://m.tiktok.com/v/'];
+export const TIKTOK_URLS = ['https://tiktok.com/', 'https://vm.tiktok.com/', 'https://www.tiktok.com/'];
