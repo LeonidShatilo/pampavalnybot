@@ -1,11 +1,11 @@
 import { Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters';
-import { link } from 'telegraf/format';
 import express from 'express';
 
 import { auth } from './auth.js';
 import { errorLogger } from './errorLogger.js';
 import { getVideoData } from './downloader.js';
+import { markdownLink } from './utils.js';
 
 import { PORT, TELEGRAM_TOKEN, TIKTOK_URLS, WEBHOOK_URL } from './constants.js';
 
@@ -38,16 +38,13 @@ bot.on(message('text'), async (ctx) => {
   const videoData = await getVideoData({ ctx, url });
   const downloadedVideo = videoData?.playURL;
   const author = videoData?.author;
-  const authorLink = link(author, `https://www.tiktok.com/@${author}`);
-  const directVideoLink = link('Direct Link', videoData?.directVideoUrl);
+  const authorLink = markdownLink(author, `https://www.tiktok.com/@${author}`);
+  const directVideoLink = markdownLink('Direct Link', videoData?.directVideoUrl);
   const caption = `👤 ${authorLink}\n\n▶️ ${directVideoLink}`;
 
-  if (downloadedVideo) {
-    await ctx.telegram.sendChatAction(ctx.chat.id, 'upload_video');
-  }
-
   try {
-    await ctx.replyWithVideo(downloadedVideo, { caption });
+    await ctx.telegram.sendChatAction(ctx.chat.id, 'upload_video');
+    await ctx.replyWithVideo(downloadedVideo, { caption, parse_mode: 'MarkdownV2' });
   } catch (error) {
     errorLogger('bot.message.text.replyWithVideo', error, ctx);
   }
