@@ -1,5 +1,6 @@
 import { Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters';
+import { link } from 'telegraf/format';
 import express from 'express';
 
 import { auth } from './auth.js';
