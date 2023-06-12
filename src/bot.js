@@ -35,17 +35,18 @@ bot.on(message('text'), async (ctx) => {
   }
 
   const videoData = await getVideoData({ ctx, url });
-  const donwloadedVideo = videoData?.playURL;
+  const downloadedVideo = videoData?.playURL;
   const author = videoData?.author;
-  const directVideoUrl = videoData?.directVideoUrl;
-  const caption = `#${author}\n\n${directVideoUrl}`;
+  const authorLink = link(author, `https://www.tiktok.com/@${author}`);
+  const directVideoLink = link('Direct Link', videoData?.directVideoUrl);
+  const caption = `👤 ${authorLink}\n\n▶️ ${directVideoLink}`;
 
-  if (donwloadedVideo) {
+  if (downloadedVideo) {
     await ctx.telegram.sendChatAction(ctx.chat.id, 'upload_video');
   }
 
   try {
-    await ctx.replyWithVideo(donwloadedVideo, { caption });
+    await ctx.replyWithVideo(downloadedVideo, { caption });
   } catch (error) {
     errorLogger('bot.message.text.replyWithVideo', error, ctx);
   }
