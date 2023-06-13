@@ -1,4 +1,6 @@
 .env
 .vscode
 node_modules
+assets/*
+!assets/.gitkeep
 yarn-error.log

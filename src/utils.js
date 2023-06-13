@@ -1,3 +1,7 @@
+import { unlink } from 'fs/promises';
+
+import { errorLogger } from './errorLogger.js';
+
 export const escapeMarkdown = (text) => {
   const charactersToEscape = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'];
 
@@ -14,4 +18,18 @@ export const markdownLink = (text, url) => {
   const escapedUrl = escapeUrl(url);
 
   return `[${escapedText}](${escapedUrl})`;
+};
+
+export const removeFile = async ({ ctx, filePath }) => {
+  try {
+    await unlink(filePath);
+  } catch (error) {
+    await errorLogger('utils.removeFile', error, ctx);
+  }
+};
+
+export const logger = ({ ctx, url }) => {
+  console.log(' ');
+  console.log(`>>> [${ctx.from.id}]: ${url}`);
+  console.log(' ');
 };
