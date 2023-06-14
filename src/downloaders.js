@@ -4,10 +4,11 @@ import installer from '@ffmpeg-installer/ffmpeg';
 import { TTScraper } from 'tiktok-scraper-ts';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
-
 import { readFile, writeFile } from 'fs/promises';
 
 import { errorLogger } from './errorLogger.js';
+
+import { getHash } from './utils.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -24,8 +25,8 @@ export const getVideoData = async ({ ctx, url }) => {
   }
 };
 
-export const downloadVideo = async ({ ctx, userId, videoId, url }) => {
-  const originalFilePath = resolve(__dirname, '../assets', `${userId}_${videoId}_${Date.now()}.mp4`);
+export const downloadVideo = async ({ ctx, url }) => {
+  const originalFilePath = resolve(__dirname, '../assets', `${getHash()}.mp4`);
 
   try {
     const response = await axios.get(url, { responseType: 'arraybuffer' });
@@ -39,12 +40,13 @@ export const downloadVideo = async ({ ctx, userId, videoId, url }) => {
   }
 };
 
-export const compressVideo = async ({ ctx, userId, videoId, inputPath }) => {
-  const compressedFilePath = resolve(__dirname, '../assets', `${userId}_${videoId}_${Date.now()}_compressed.mp4`);
+export const compressVideo = async ({ ctx, inputPath }) => {
+  const compressedFilePath = resolve(__dirname, '../assets', `${getHash()}.mp4`);
 
   try {
     await new Promise((resolve, reject) => {
-      ffmpeg(inputPath)
+      ffmpeg()
+        .input(inputPath)
         .outputOptions('-crf 30')
         .outputOptions('-preset superfast')
         .outputOptions('-movflags +faststart')

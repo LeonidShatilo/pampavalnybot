@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { unlink } from 'fs/promises';
 
 import { errorLogger } from './errorLogger.js';
@@ -18,6 +19,10 @@ export const markdownLink = (text, url) => {
   const escapedUrl = escapeUrl(url);
 
   return `[${escapedText}](${escapedUrl})`;
+};
+
+export const getHash = () => {
+  return crypto.randomBytes(16).toString('hex');
 };
 
 export const removeFile = async ({ ctx, filePath }) => {

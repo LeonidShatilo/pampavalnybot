@@ -5,7 +5,7 @@ import { message } from 'telegraf/filters';
 import { auth } from './auth.js';
 import { errorLogger } from './errorLogger.js';
 import { downloadVideo, compressVideo, getVideoData } from './downloaders.js';
-import { logger, markdownLink } from './utils.js';
+import { logger, markdownLink, removeFile } from './utils.js';
 
 import { DEFAULT_ERROR_MESSAGE, PORT, TELEGRAM_TOKEN, TIKTOK_URLS, WEBHOOK_URL } from './constants.js';
 
@@ -26,7 +26,6 @@ bot.command('start', async (ctx) => {
 });
 
 bot.on(message('text'), async (ctx) => {
-  const userId = ctx.from?.id;
   const url = ctx.message.text;
   const isTikTokUrl = TIKTOK_URLS.some((tiktokUrl) => url.startsWith(tiktokUrl));
 
@@ -45,7 +44,6 @@ bot.on(message('text'), async (ctx) => {
   }
 
   const playVideoUrl = videoData?.playURL;
-  const videoId = videoData?.id;
   const author = videoData?.author;
   const authorLink = markdownLink(author, `https://www.tiktok.com/@${author}`);
   const directVideoLink = markdownLink('Direct Link', videoData?.directVideoUrl);
@@ -54,8 +52,8 @@ bot.on(message('text'), async (ctx) => {
   logger({ ctx, url: videoData?.directVideoUrl });
 
   try {
-    const originalFilePath = await downloadVideo({ ctx, userId, videoId, url: playVideoUrl });
-    const compressedFilePath = await compressVideo({ ctx, userId, videoId, inputPath: originalFilePath });
+    const originalFilePath = await downloadVideo({ ctx, url: playVideoUrl });
+    const compressedFilePath = await compressVideo({ ctx, inputPath: originalFilePath });
 
     await ctx.telegram.sendChatAction(ctx.chat.id, 'upload_video');
     await ctx.sendVideo({ source: compressedFilePath }, { caption, parse_mode: 'MarkdownV2' });
