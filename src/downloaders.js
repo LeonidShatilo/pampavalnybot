@@ -14,7 +14,7 @@ export const getVideoData = async ({ ctx, url }) => {
 
     return result;
   } catch (error) {
-    errorLogger('downloader.getVideoData', error, ctx);
+    errorLogger('downloaders.getVideoData', error, ctx);
   }
 };
 
@@ -41,6 +41,6 @@ export const downloadVideo = async ({ ctx, filePath, url }) => {
 
     return await readFile(filePath);
   } catch (error) {
-    errorLogger('downloader.downloadVideo', error, ctx);
+    errorLogger('downloaders.downloadVideo', error, ctx);
   }
 };
