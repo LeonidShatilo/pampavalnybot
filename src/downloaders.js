@@ -47,8 +47,8 @@ export const compressVideo = async ({ ctx, inputPath }) => {
     await new Promise((resolve, reject) => {
       ffmpeg()
         .input(inputPath)
-        .outputOptions('-crf 30')
-        .outputOptions('-preset superfast')
+        .outputOptions('-crf 26')
+        .outputOptions('-preset fast')
         .outputOptions('-movflags +faststart')
         .outputOptions('-vf', 'scale=iw/2:-1')
         .outputOptions('-c:v', 'libx264')
