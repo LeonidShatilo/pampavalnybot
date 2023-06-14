@@ -1,5 +1,7 @@
 import express from 'express';
 import { Telegraf } from 'telegraf';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { message } from 'telegraf/filters';
 
 import { auth } from './auth.js';
@@ -8,6 +10,8 @@ import { downloadVideo, compressVideo, getVideoData } from './downloaders.js';
 import { markdownLink, removeFile } from './utils.js';
 
 import { DEFAULT_ERROR_MESSAGE, PORT, TELEGRAM_TOKEN, TIKTOK_URLS, WEBHOOK_URL } from './constants.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
@@ -50,24 +54,21 @@ bot.on(message('text'), async (ctx) => {
   const directVideoLink = markdownLink('Direct Link', videoData?.directVideoUrl);
   const caption = `👤 ${authorLink}\n\n▶️ ${directVideoLink}`;
 
+  const originalFilePath = resolve(__dirname, '../assets', `${id}_${Date.now()}.mp4`);
+  const compressedFilePath = resolve(__dirname, '../assets', `${id}_${Date.now()}_compressed.mp4`);
+
+  await downloadVideo({ ctx, url: playVideoUrl, outputPath: originalFilePath });
+  await compressVideo({ ctx, id, inputPath: originalFilePath, outputPath: compressedFilePath });
+
   try {
-    const originalFilePath = await downloadVideo({ ctx, id, url: playVideoUrl });
-    const compressedFilePath = await compressVideo({ ctx, id, inputPath: originalFilePath });
-
-    if (!originalFilePath || !compressedFilePath) {
-      await ctx.reply(DEFAULT_ERROR_MESSAGE);
-
-      return;
-    }
-
     await ctx.telegram.sendChatAction(ctx.chat.id, 'upload_video');
-    await ctx.replyWithVideo({ source: compressedFilePath }, { caption, parse_mode: 'MarkdownV2' });
+    await ctx.sendVideo({ source: compressedFilePath }, { caption, parse_mode: 'MarkdownV2' });
 
-    await removeFile(originalFilePath);
-    await removeFile(compressedFilePath);
+    await removeFile({ ctx, filePath: originalFilePath });
+    await removeFile({ ctx, filePath: compressedFilePath });
   } catch (error) {
     await ctx.reply(DEFAULT_ERROR_MESSAGE);
-    errorLogger('bot.on.message.text', error, ctx);
+    errorLogger('bot.on.message.text::sendVideo', error, ctx);
   }
 });
 

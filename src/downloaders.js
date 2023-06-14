@@ -2,15 +2,12 @@ import axios from 'axios';
 import ffmpeg from 'fluent-ffmpeg';
 import installer from '@ffmpeg-installer/ffmpeg';
 import { TTScraper } from 'tiktok-scraper-ts';
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
+
 import { readFile, writeFile } from 'fs/promises';
 
 import { errorLogger } from './errorLogger.js';
 
 ffmpeg.setFfmpegPath(installer.path);
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export const getVideoData = async ({ ctx, url }) => {
   try {
@@ -23,24 +20,18 @@ export const getVideoData = async ({ ctx, url }) => {
   }
 };
 
-export const downloadVideo = async ({ ctx, id, url }) => {
-  const originalFilePath = resolve(__dirname, '../assets', `${id}_${Date.now()}.mp4`);
-
+export const downloadVideo = async ({ ctx, url, outputPath }) => {
   try {
     const response = await axios.get(url, { responseType: 'arraybuffer' });
     const videoBuffer = Buffer.from(response.data);
 
-    await writeFile(originalFilePath, videoBuffer);
-
-    return originalFilePath;
+    await writeFile(outputPath, videoBuffer);
   } catch (error) {
     errorLogger('downloaders.downloadVideo', error, ctx);
   }
 };
 
-export const compressVideo = async ({ ctx, id, inputPath }) => {
-  const compressedFilePath = resolve(__dirname, '../assets', `${id}_${Date.now()}_compressed.mp4`);
-
+export const compressVideo = async ({ ctx, inputPath, outputPath }) => {
   try {
     await new Promise((resolve, reject) => {
       ffmpeg(inputPath)
@@ -50,7 +41,7 @@ export const compressVideo = async ({ ctx, id, inputPath }) => {
         .outputOptions('-vf', 'scale=iw/2:-1')
         .outputOptions('-c:v', 'libx264')
         .outputFormat('mp4')
-        .save(compressedFilePath)
+        .save(outputPath)
         .on('end', () => {
           resolve();
         })
@@ -59,7 +50,8 @@ export const compressVideo = async ({ ctx, id, inputPath }) => {
         });
     });
 
-    return await readFile(compressedFilePath);
+    const videoBuffer = await readFile(outputPath);
+    await writeFile(outputPath, videoBuffer);
   } catch (error) {
     errorLogger('downloaders.compressVideo', error, ctx);
   }
