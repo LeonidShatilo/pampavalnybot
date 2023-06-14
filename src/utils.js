@@ -34,7 +34,10 @@ export const removeFile = async ({ ctx, filePath }) => {
 };
 
 export const logger = ({ ctx, url }) => {
+  const username = ctx.from?.username;
+  const userId = ctx.from?.id;
+
   console.log(' ');
-  console.log(`>>> [${ctx.from?.id}]: ${url}`);
+  console.log(`🟨 [${username || userId}]: ${url}`);
   console.log(' ');
 };
