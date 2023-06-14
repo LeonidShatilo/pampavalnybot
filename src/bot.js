@@ -1,17 +1,13 @@
 import express from 'express';
 import { Telegraf } from 'telegraf';
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
 import { message } from 'telegraf/filters';
 
 import { auth } from './auth.js';
 import { errorLogger } from './errorLogger.js';
-import { downloadVideo, getVideoData } from './downloaders.js';
-import { markdownLink, logger, removeFile } from './utils.js';
+import { downloadVideo, compressVideo, getVideoData } from './downloaders.js';
+import { markdownLink, removeFile } from './utils.js';
 
 import { DEFAULT_ERROR_MESSAGE, PORT, TELEGRAM_TOKEN, TIKTOK_URLS, WEBHOOK_URL } from './constants.js';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
@@ -40,6 +36,13 @@ bot.on(message('text'), async (ctx) => {
   }
 
   const videoData = await getVideoData({ ctx, url });
+
+  if (!videoData || !videoData?.playURL) {
+    await ctx.reply('Не удалось получить данные о видео. Попробуйте позже.');
+
+    return;
+  }
+
   const playVideoUrl = videoData?.playURL;
   const id = videoData?.id;
   const author = videoData?.author;
@@ -47,18 +50,24 @@ bot.on(message('text'), async (ctx) => {
   const directVideoLink = markdownLink('Direct Link', videoData?.directVideoUrl);
   const caption = `👤 ${authorLink}\n\n▶️ ${directVideoLink}`;
 
-  logger({ ctx, url: videoData?.directVideoUrl });
-
   try {
-    const filePath = resolve(__dirname, '../assets', `${id}_${Date.now()}.mp4`);
-    const downloadedVideoPath = await downloadVideo({ ctx, filePath, url: playVideoUrl });
+    const originalFilePath = await downloadVideo({ ctx, id, url: playVideoUrl });
+    const compressedFilePath = await compressVideo({ ctx, id, inputPath: originalFilePath });
+
+    if (!originalFilePath || !compressedFilePath) {
+      await ctx.reply(DEFAULT_ERROR_MESSAGE);
+
+      return;
+    }
 
     await ctx.telegram.sendChatAction(ctx.chat.id, 'upload_video');
-    await ctx.replyWithVideo({ source: downloadedVideoPath }, { caption, parse_mode: 'MarkdownV2' });
-    await removeFile({ ctx, filePath });
+    await ctx.replyWithVideo({ source: compressedFilePath }, { caption, parse_mode: 'MarkdownV2' });
+
+    await removeFile(originalFilePath);
+    await removeFile(compressedFilePath);
   } catch (error) {
     await ctx.reply(DEFAULT_ERROR_MESSAGE);
-    errorLogger('bot.message.text.replyWithVideo', error, ctx);
+    errorLogger('bot.on.message.text', error, ctx);
   }
 });
 
