@@ -5,9 +5,11 @@ import { message } from 'telegraf/filters';
 import { auth } from './auth.js';
 import { errorLogger } from './errorLogger.js';
 import { downloadVideo, compressVideo, getVideoData } from './downloaders.js';
-import { markdownLink, removeFile } from './utils.js';
+import { markdownLink, removeFile, clearAssets } from './utils.js';
 
 import { DEFAULT_ERROR_MESSAGE, PORT, TELEGRAM_TOKEN, TIKTOK_URLS, WEBHOOK_URL } from './constants.js';
+
+clearAssets();
 
 const app = express();
 
