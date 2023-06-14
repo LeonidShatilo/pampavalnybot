@@ -26,8 +26,11 @@ bot.command('start', async (ctx) => {
 });
 
 bot.on(message('text'), async (ctx) => {
+  const userId = ctx.from?.id;
   const url = ctx.message.text;
   const isTikTokUrl = TIKTOK_URLS.some((tiktokUrl) => url.startsWith(tiktokUrl));
+
+  console.log(`>>> ${ctx.message.text}`);
 
   if (!isTikTokUrl) {
     await ctx.reply('Я поддерживаю скачивание видео только из TikTok. Пожалуйста, отправь мне валидную ссылку.');
@@ -44,16 +47,16 @@ bot.on(message('text'), async (ctx) => {
   }
 
   const playVideoUrl = videoData?.playURL;
-  const id = videoData?.id;
+  const videoId = videoData?.id;
   const author = videoData?.author;
   const authorLink = markdownLink(author, `https://www.tiktok.com/@${author}`);
   const directVideoLink = markdownLink('Direct Link', videoData?.directVideoUrl);
   const caption = `👤 ${authorLink}\n\n▶️ ${directVideoLink}`;
 
-  const originalFilePath = await downloadVideo({ ctx, id, url: playVideoUrl });
-  const compressedFilePath = await compressVideo({ ctx, id, inputPath: originalFilePath });
-
   try {
+    const originalFilePath = await downloadVideo({ ctx, userId, videoId, url: playVideoUrl });
+    const compressedFilePath = await compressVideo({ ctx, userId, videoId, inputPath: originalFilePath });
+
     await ctx.telegram.sendChatAction(ctx.chat.id, 'upload_video');
     await ctx.sendVideo({ source: compressedFilePath }, { caption, parse_mode: 'MarkdownV2' });
 

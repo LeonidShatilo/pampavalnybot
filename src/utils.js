@@ -30,6 +30,6 @@ export const removeFile = async ({ ctx, filePath }) => {
 
 export const logger = ({ ctx, url }) => {
   console.log(' ');
-  console.log(`>>> [${ctx.from.id}]: ${url}`);
+  console.log(`>>> [${ctx.from?.id}]: ${url}`);
   console.log(' ');
 };

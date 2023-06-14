@@ -24,8 +24,8 @@ export const getVideoData = async ({ ctx, url }) => {
   }
 };
 
-export const downloadVideo = async ({ ctx, id, url }) => {
-  const originalFilePath = resolve(__dirname, '../assets', `${id}_${Date.now()}.mp4`);
+export const downloadVideo = async ({ ctx, userId, videoId, url }) => {
+  const originalFilePath = resolve(__dirname, '../assets', `${userId}_${videoId}_${Date.now()}.mp4`);
 
   try {
     const response = await axios.get(url, { responseType: 'arraybuffer' });
@@ -39,8 +39,8 @@ export const downloadVideo = async ({ ctx, id, url }) => {
   }
 };
 
-export const compressVideo = async ({ ctx, id, inputPath }) => {
-  const compressedFilePath = resolve(__dirname, '../assets', `${id}_${Date.now()}_compressed.mp4`);
+export const compressVideo = async ({ ctx, userId, videoId, inputPath }) => {
+  const compressedFilePath = resolve(__dirname, '../assets', `${userId}_${videoId}_${Date.now()}_compressed.mp4`);
 
   try {
     await new Promise((resolve, reject) => {
