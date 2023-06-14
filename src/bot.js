@@ -5,11 +5,9 @@ import { message } from 'telegraf/filters';
 import { auth } from './auth.js';
 import { errorLogger } from './errorLogger.js';
 import { downloadVideo, compressVideo, getVideoData } from './downloaders.js';
-import { markdownLink, removeFile, clearAssets } from './utils.js';
+import { logger, markdownLink } from './utils.js';
 
 import { DEFAULT_ERROR_MESSAGE, PORT, TELEGRAM_TOKEN, TIKTOK_URLS, WEBHOOK_URL } from './constants.js';
-
-clearAssets();
 
 const app = express();
 
@@ -32,8 +30,6 @@ bot.on(message('text'), async (ctx) => {
   const url = ctx.message.text;
   const isTikTokUrl = TIKTOK_URLS.some((tiktokUrl) => url.startsWith(tiktokUrl));
 
-  console.log(`>>> ${ctx.message.text}`);
-
   if (!isTikTokUrl) {
     await ctx.reply('Я поддерживаю скачивание видео только из TikTok. Пожалуйста, отправь мне валидную ссылку.');
 
@@ -43,7 +39,7 @@ bot.on(message('text'), async (ctx) => {
   const videoData = await getVideoData({ ctx, url });
 
   if (!videoData || !videoData?.playURL) {
-    await ctx.reply('Не удалось получить данные о видео. Попробуйте позже.');
+    await ctx.reply('Не удалось получить данные о видео.');
 
     return;
   }
@@ -54,6 +50,8 @@ bot.on(message('text'), async (ctx) => {
   const authorLink = markdownLink(author, `https://www.tiktok.com/@${author}`);
   const directVideoLink = markdownLink('Direct Link', videoData?.directVideoUrl);
   const caption = `👤 ${authorLink}\n\n▶️ ${directVideoLink}`;
+
+  logger({ ctx, url: videoData?.directVideoUrl });
 
   try {
     const originalFilePath = await downloadVideo({ ctx, userId, videoId, url: playVideoUrl });
